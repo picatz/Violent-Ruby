@@ -25,6 +25,19 @@ scanner.scan(ports: 80, 8080)
 # => [{:ip=>"127.0.0.1", :port=>8080, :banner=>"MS-IIS WEB SERVER 5.0"}]
 ```
 
+### Unix Password Cracker
+
+The unix password cracker provide a simple interface to crack unix passwords. As hackers do.
+```ruby
+require 'violent_ruby'
+
+password_cracker = ViolentRuby::UnixPasswordCracker.new
+password_cracker.file = "resources/etc_passwd_file"
+password_cracker.dictionary = "resources/dictionary.txt"
+password_cracker.crack!
+=> [{:username=>"victim", :encrypted_password=>"HX9LLTdc/jiDE", :plaintext_password=>"egg"}]
+```
+
 ## License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
