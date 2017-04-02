@@ -1,4 +1,4 @@
-# Violent Ruby
+# Violent Ruby 🎻
 
 Violent Ruby is a collection of tools for Hackers, Forensic Analysts, Penetration Testers and Security Engineers.
 
