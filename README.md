@@ -15,6 +15,7 @@ require 'violent_ruby'
 ### Vulnerability Scanner
 
 The vulnerability scanner is a banner grabber that can check banners on ports and check if they're known to be vulnerable. However, you will need to provide the list of known vulnerable banners yourself.
+
 ```ruby
 require 'violent_ruby'
 
@@ -28,6 +29,7 @@ scanner.scan(ports: 80, 8080)
 ### Unix Password Cracker
 
 The unix password cracker provide a simple interface to crack unix passwords. As hackers do.
+
 ```ruby
 require 'violent_ruby'
 
