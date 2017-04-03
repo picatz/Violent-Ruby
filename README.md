@@ -35,7 +35,7 @@ password_cracker = ViolentRuby::UnixPasswordCracker.new
 password_cracker.file = "resources/etc_passwd_file"
 password_cracker.dictionary = "resources/dictionary.txt"
 password_cracker.crack!
-=> [{:username=>"victim", :encrypted_password=>"HX9LLTdc/jiDE", :plaintext_password=>"egg"}]
+# => [{:username=>"victim", :encrypted_password=>"HX9LLTdc/jiDE", :plaintext_password=>"egg"}]
 ```
 
 ## License
