@@ -23,6 +23,8 @@ module ViolentRuby
     # @param args [String] :file The path to an /etc/passwd file.
     # @param args [String] :dictionary The path to a dictionry of passwords.
     def initialize(args = {})
+      @file       = false
+      @dictionary = false
       if args[:file] && File.readable?(args[:file])
         @file        = args[:file]
         @credentials = parse_etc_file(file: args[:file])
