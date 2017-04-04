@@ -1,0 +1,30 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vulnerable FTP Server in'a Can ( well, a VM ).
+Vagrant.configure("2") do |config|
+  # For a complete reference, please see the online documentation at
+  # https://docs.vagrantup.com.
+
+  config.vm.box = "debian/jessie64"
+  config.vm.network "forwarded_port", guest: 21, host:2121 
+  config.vm.network "private_network", ip: "192.168.33.10"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  
+  # Enable provisioning with a shell script.
+  config.vm.provision "shell", inline: <<-SHELL
+    sudo su root
+    apt-get update
+    apt-get install vsftpd -y
+    # for fun
+    sed -i -e 's/anonymous_enable=NO/anonymous_enable=YES/g' /etc/vsftpd.conf
+    service vsftpd restart
+  SHELL
+end
+
+# Basic Gist of the Picture
+# vagrant up
+# vagrant ssh
+# ftp localhost
+# user: vagrant
+# password: vagrant

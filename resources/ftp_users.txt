@@ -1,0 +1,6 @@
+anonymous
+ftp
+vagrant
+root
+admin
+picat
