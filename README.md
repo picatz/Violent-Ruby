@@ -2,6 +2,10 @@
 
 Violent Ruby is a collection of tools for Hackers, Forensic Analysts, Penetration Testers and Security Engineers.
 
+#### Development Notice
+
+⚠️  Gem is still in development.
+
 ## Installation
 
     $ gem install violent_ruby
@@ -77,7 +81,7 @@ scanner.scan(ports: 80, 8080)
 🎻 (main)> 
 🎻 (main)> 
 🎻 (main)> show-method scanner.retrieve_banner
-From: /Users/kentgruber/Desktop/Public Projects/violent_ruby/lib/violent_ruby/vulnerability_scanner/vulnerability_scanner.rb @ line 107:
+From: /path_to_where_this_is/violent_ruby/lib/violent_ruby/vulnerability_scanner/vulnerability_scanner.rb @ line 107:
 Owner: ViolentRuby::VulnerabilityScanner
 Visibility: public
 Number of lines: 14
