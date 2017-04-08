@@ -14,7 +14,7 @@ module ViolentRuby
   #   ssh.ips       = "resources/ssh_ips.txt"
   #   ssh.ports     = "resources/ssh_ports.txt"
   #   # brue'm!
-  #   ftp.brute_force!
+  #   ssh.brute_force!
   #   # => results
   #
   class SSHBruteForcer 
@@ -24,7 +24,7 @@ module ViolentRuby
     attr_accessor :passwords
     # @attr [String] ips Path to file containing ip addresses.
     attr_accessor :ips
-    # @attr [String] ips Path to file containing ports.
+    # @attr [String] ports Path to file containing ports.
     attr_accessor :ports
 
     # Create a new SSH Brute Forcer.

@@ -16,9 +16,13 @@ module ViolentRuby
 	#   # => results
 	#
 	class FtpBruteForcer 
-		attr_accessor :users
+		# @attr [String] users Path to file containing users.
+    attr_accessor :users
+    # @attr [String] passwords Path to file containing passwords.
 		attr_accessor :passwords
+    # @attr [String] ips Path to file containing ip addresses.
 		attr_accessor :ips
+    # @attr [String] ports Path to file containing ports.
 		attr_accessor :ports
 
 		# Create a new Ftp Brute Forcer.
