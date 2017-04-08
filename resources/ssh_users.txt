@@ -1,0 +1,4 @@
+vagrant
+root
+admin
+picat
