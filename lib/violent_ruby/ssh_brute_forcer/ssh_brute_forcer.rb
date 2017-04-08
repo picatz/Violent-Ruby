@@ -58,7 +58,6 @@ module ViolentRuby
       passwords = args[:passwords]  || @passwords
       iterate_over(ips).each do |ip|
         iterate_over(ports).each do |port|
-          binding.pry
           next unless connectable?(ip: ip, port: port)
           iterate_over(users).each do |user|
             iterate_over(passwords).each do |password|
