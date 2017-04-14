@@ -16,6 +16,18 @@ Violent Ruby is a collection of tools for Hackers, Forensic Analysts, Penetratio
 require 'violent_ruby'
 ```
 
+### Banner Grabber
+
+The banner grabber provides a simple interface to do a banner grab.
+
+```ruby
+require 'violent_ruby'
+banner_grabber = ViolentRuby::BannerGrabber.new(ip: 'localhost', port: 2222)
+banner_grabber.grab do |result|
+  # do something with result
+end
+```
+
 ### Vulnerability Scanner
 
 The vulnerability scanner is a banner grabber that can check banners on ports and check if they're known to be vulnerable. However, you will need to provide the list of known vulnerable banners yourself.
