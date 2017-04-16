@@ -105,6 +105,7 @@ module ViolentRuby
         File.readlines(dict).map(&:strip).each do |word|
           if cracked?(password, word)
             yield format_result(user, password, word)
+            break
           else
             yield format_result(user, password)
           end
