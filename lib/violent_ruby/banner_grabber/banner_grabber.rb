@@ -1,4 +1,4 @@
-require 'socket'
+require 'socketry'
 
 module ViolentRuby
   # This Banner Grabber class is meant to provide a simple
@@ -14,7 +14,7 @@ module ViolentRuby
   #   end
   #
   # @example Basic Usage with HTTP Connection
-  #   BannerGrabber.new(ip: '0.0.0.0', port: 4567 http: true).grab do |result|
+  #   BannerGrabber.new(ip: '0.0.0.0', port: 4567).grab(http: true) do |result|
   #     puts result
   #     # => => {:ip=>"0.0.0.0", :port=>4567, :open=>true, :banner=>""}
   #   end
@@ -35,48 +35,45 @@ module ViolentRuby
     attr_accessor :ports
 
     # Create a new Banner Grabber. If a block if given,
-    # @param args [Hash]
-    # @option args [String] :ip IP address to connect to.
-    # @option args [Array<String>] :ips An array of IP address to connect to.
-    # @option args [Integer] :port Port to connect to.
-    # @option args [Array<Integer>] :ports An array of ports to connect to.
+    # @param ips   [String, Array<String>]
+    # @param ports [String, Array<String>]
     # @see use_ips
     # @see use_ports
-    # @return [void]
-    # @yield [Hash]
-    def initialize(args = {})
-      @ips   = use_ips(args)   if args[:ips]   || args[:ip]
-      @ports = use_ports(args) if args[:ports] || args[:port]
+    # @return [BannerGrabber]
+    def initialize(ips:, ports:)
+      @ips   = use_ips(ips)   
+      @ports = use_ports(ports) 
     end
 
     # Attempt to grab the banner. Optionally, an HTTP option
     # can help simulate HTTP GET requests to a webserver.
-    # @param args [Hash]
-    # @option args [Boolean] :http Perform an HTTP GET request.
+    # @param ips   [String, Array<String>]
+    # @param ports [String, Array<String>] 
+    # @param http  [Boolean]               Perform an HTTP GET request if +true+.
     # @see use_ips
     # @see use_ports
     # @yield [Hash]
-    def grab(args = {})
-      ips   = use_ips(args)
-      ports = use_ports(args)
-      ips.each do |ip|
-        ports.each do |port|
-          if socket = connect(ip, port)
-            if args[:http]
-              socket.puts("GET / HTTP/1.1\r\nHost:3.1.3.3.7\r\n\r\n")
-            end
-            unless banner = socket.recv(1024)
-              banner = false
-            end
+    def grab(ips: false, ports: false, timeout: 2, **args)
+      results = []
+      use_ips(ips) do |ip|
+        use_ports(ports) do |port|
+          if socket = connect(ip: ip, port: port, timeout: 2)
+            socket.writepartial("GET / HTTP/1.1\r\nHost:3.1.3.3.7\r\n\r\n") if args[:http]
+            banner = false unless banner = socket.readpartial(1024, timeout: timeout)
           end
           if socket
-            yield format_result(ip, port, true, banner)
+            result = format_result(ip: ip, port: port, open: true, banner: banner)
+            yield result if block_given?
+            results << result
             socket.close
           else
-            yield format_result(ip, port, false)
+            result = format_result(ip: ip, port: port)
+            yield result if block_given?
+            results << result
           end
         end
       end
+      results
     end
 
     # Because sometimes you need to say it with more emphasis!
@@ -86,8 +83,8 @@ module ViolentRuby
     # @param ip [String]
     # @param port [Integer]
     # @return [TCPSocket, false]
-    def connect(ip, port)
-      TCPSocket.new(ip, port)
+    def connect(ip:, port:, timeout:)
+      Socketry::TCP::Socket.connect(ip, port, local_addr: nil, local_port: nil, timeout: timeout)
     rescue
       false
     end
@@ -102,49 +99,62 @@ module ViolentRuby
     # @param banner [String, Boolean] If a banner was able to be retrieved.
     # @see grab
     # @return [Hash]
-    def format_result(ip, port, open = false, banner = false)
-      result = { ip: ip, port: port }
+    def format_result(ip:, port:, open: false, banner: false)
+      result          = { ip: ip, port: port }
       result[:open]   = open
-      result[:banner] = banner if banner
+      result[:banner] = banner if banner.is_a?(String) and !banner.empty?
       result
     end
 
     # @api private
+    #
     # Determine what IP address(es) to use from a given arguments hash.
-    # @param args [Hash]
-    # @option args [String] :ip IP address to connect to.
-    # @option args [Array<String>] :ips An array of IP address to connect to.
+    #
+    # @param ip  [String]        IP address to connect to.
+    # @param ips [Array<String>] An array of IP address to connect to.
+    #
+    # @yield [String] Each ip if a block if given.
     # @return [Array<String>]
-    # @raise [StandardError] If no IP address(es) can be determined.
-    def use_ips(args)
-      if args[:ips]
-        args[:ips]
-      elsif args[:ip]
-        [args[:ip]]
-      elsif @ips
-        @ips
+    #
+    # @raise [ArgumentError] If no IP address(es) can be determined.
+    #
+    def use_ips(ips)
+      results = []
+      ips = @ips unless ips 
+      if ips.is_a? Array
+        results.push(*ips)   
+      elsif ips.is_a? String
+        results.push(ips)
       else
-        raise 'No IP address(es) given!'
+        raise ArgumentError 
       end
+      results.each { |ip| yield ip } if block_given?
+      results 
     end
 
     # @api private
+    #
     # Determine what port(s) to use from a given arguments hash.
-    # @param args [Hash]
-    # @option args [Integer] :port Port to connect to.
-    # @option args [Array<Integer>] :ports An array of ports to connect to.
-    # @return [Array<Integer>]
-    # @raise [StandardError] If no ports(s) can be determined.
-    def use_ports(args)
-      if args[:ports]
-        args[:ports]
-      elsif args[:port]
-        [args[:port]]
-      elsif @ports
-        @ports
+    #
+    # @param port  [String]        Port to connect to. 
+    # @param ports [Array<String>] An array of ports to connect to.
+    #
+    # @yield [String]          Each ip if a block if given.
+    # @return [Array<Integer>] 
+    # 
+    # @raise [ArgumentError] If no port(s) can be determined.  
+    def use_ports(ports)
+      results= []
+      ports = @ports unless ports
+      if ports.is_a? Array
+        results.push(*ports)   
+      elsif ports.is_a? String
+        results.push(ports)
       else
-        raise 'No port(s) given!'
+        raise ArgumentError
       end
+      results.each { |port| yield port } if block_given?
+      results
     end
   end
 end
