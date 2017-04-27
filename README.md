@@ -22,10 +22,21 @@ The banner grabber provides a simple interface to do a banner grab.
 
 ```ruby
 require 'violent_ruby'
+
 banner_grabber = ViolentRuby::BannerGrabber.new(ip: 'localhost', port: 2222)
+
 banner_grabber.grab do |result|
   # do something with result
 end
+# => [{:ip=>"127.0.0.1", :port=>"2222", :open=>true, :banner=>"SSH-1.0-OpenSSH_2.3lol\r\n"}]
+
+banner_grabber.ips   = "192.30.253.113" 
+banner_grabber.ports = ["80", "443"]
+
+banner_grabber.grab(http: true, timeout: 0.08) do |result|
+  # do something with result
+end
+# => [{:ip=>"192.30.253.113", :port=>"80", :open=>true, :banner=>"HTTP/1.1 301 Moved Permanently\r\n" + "Content-length: 0\r\n" + "Location: https://3.1.3.3.7/\r\n" + "Connection: close\r\n" + "\r\n"}, {:ip=>"192.30.253.113", :port=>"443", :open=>true}]
 ```
 
 ### Vulnerability Scanner
@@ -36,10 +47,13 @@ The vulnerability scanner is a banner grabber that can check banners on ports an
 require 'violent_ruby'
 
 scanner = ViolentRuby::VulnerabilityScanner.new
+
 scanner.targets = "127.0.0.1"
 scanner.known_vulnerabilities = "MS-IIS WEB SERVER 5.0"
 
-scanner.scan(ports: 80, 8080)
+scanner.scan(ports: 80, 8080) do |result|
+  # do something with result
+end
 # => [{:ip=>"127.0.0.1", :port=>8080, :banner=>"MS-IIS WEB SERVER 5.0"}]
 ```
 
@@ -51,6 +65,7 @@ The unix password cracker provide a simple interface to crack unix passwords. As
 require 'violent_ruby'
 
 password_cracker = ViolentRuby::UnixPasswordCracker.new
+
 password_cracker.file = "resources/etc_passwd_file"
 password_cracker.dictionary = "resources/dictionary.txt"
 
@@ -66,6 +81,7 @@ The ftp brute forcer can be used to to brute force your way into a server over F
 require 'violent_ruby'
 
 ftp = FtpBruteForcer.new
+
 ftp.users     = "resources/ftp_users.txt"
 ftp.ports     = "resources/ftp_ports.txt"
 ftp.ips       = "resources/ftp_ips.txt"
@@ -85,6 +101,7 @@ The ssh brute forcer can be used to to brute force your way into a server over S
 require 'violent_ruby'
 
 ssh = SSHBruteForcer.new
+
 ssh.users     = "resources/ssh_users.txt"
 ssh.ports     = "resources/ssh_ports.txt"
 ssh.ips       = "resources/ssh_ips.txt"
