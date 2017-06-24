@@ -101,8 +101,9 @@ module ViolentRuby
 		# @return [Boolean]
 		def able_to_login?(args = {})
 			@ftp.connect(args[:ip], args[:port])
-			@ftp.login(args[:username], args[:password]) 
-			if @ftp.welcome == "230 Login successful.\n"
+			@ftp.login(args[:username], args[:password])
+			# Can be: 230 logged in OR 230 Welcome to blah OR ... 
+			if @ftp.welcome.split(" ")[0] == "230"
 				@ftp.close
 				return true
 			end
