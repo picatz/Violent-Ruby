@@ -26,7 +26,7 @@ module ViolentRuby
 				self.ports.each do |port|
 					self.users.each do |user|
 						self.passwords.each do |password|
-							if connectable?(ip, password) 
+							if connectable?(ip, port) 
 								if able_to_login?(ip: ip, password: password, user: user, port: port)
 									result = format_result("SUCCESS", ip, port, user, password)
 								else
@@ -48,13 +48,14 @@ module ViolentRuby
 				req = Net::HTTP::Get.new("/")
 				http.request(req)
 				return true
-			rescue
+			rescue => e
+				puts e
 				return false
 			end
 		end
 
 		def able_to_login?(args = {})
-			http = Net::HTTP.new(ip, port)
+			http = Net::HTTP.new(args[:ip], args[:port])
 			req = Net::HTTP::Get.new("/")
 			req.basic_auth(args[:user], args[:password])
 			http.request(req).code == "200"
@@ -83,5 +84,3 @@ module ViolentRuby
 		end
 	end
 end
-
-				
