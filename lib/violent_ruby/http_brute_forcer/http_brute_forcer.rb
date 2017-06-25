@@ -22,7 +22,6 @@ module ViolentRuby
 			self.passwords = file_to_array(self.passwords)
 			self.ports = file_to_array(self.ports)
 			self.ips = file_to_array(self.ips)
-			meets_our_requirements?(ips: self.ips, ports: self.ports, usernames: self.usernames, passwords: self.passwords)
 			self.ips.each do |ip|
 				self.ports.each do |port|
 					self.users.each do |user|
@@ -82,7 +81,6 @@ module ViolentRuby
 		def format_result(type, ip, port, user, password)
 			{ time: Time.now, type: type, ip: ip, port: port, user: user, password: password }
 		end
-
 	end
 end
 
