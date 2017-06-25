@@ -107,7 +107,7 @@ module ViolentRuby
 				@ftp.close
 				return true
 			end
-			ftp_login.quit
+			@ftp.quit
 			false
 		rescue
 			false

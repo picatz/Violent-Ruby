@@ -6,7 +6,7 @@ require 'violent_ruby/version'
 Gem::Specification.new do |spec|
   spec.name          = "violent_ruby"
   spec.version       = ViolentRuby::VERSION
-  spec.authors       = ["Kent Gruber"]
+  spec.authors       = ["Kent Gruber", "Gr3atWh173"]
   spec.email         = ["kgruber1@emich.edu"]
 
   spec.summary       = %q{Collection of information security tools written in Ruby.}
