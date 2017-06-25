@@ -74,6 +74,7 @@ module ViolentRuby
 		end
 		
 		def file_to_array(arg)
+			return arg if arg.is_a? Array
 			raise ArgumentError, "Arg must be a file" unless File.file? arg
 			File.read(arg).split("\n").map(&:strip)
 		end
