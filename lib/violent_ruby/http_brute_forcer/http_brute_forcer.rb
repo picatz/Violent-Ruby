@@ -203,7 +203,5 @@ module ViolentRuby
 			false
 		end
 
-
-
 	end
 end
