@@ -1,0 +1,6 @@
+anonymous
+ubuntu
+vagrant
+root
+admin
+picat
